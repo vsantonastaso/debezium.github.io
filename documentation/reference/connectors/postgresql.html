@@ -144,6 +144,10 @@
           <hr class="dbz-dropdown__rule">
           <div class="dbz-dropdown__section">Versions</div>
           <div class="dbz-dropdown__versions">
+            <a class="dbz-version" href="/documentation/reference/nightly/">
+              <span class="dbz-version__number">nightly</span>
+              <span class="dbz-badge dbz-badge--dev">nightly</span>
+            </a>
             <a class="dbz-version" href="/documentation/reference/3.8/">
               <span class="dbz-version__number">3.8</span>
               <span class="dbz-badge dbz-badge--dev">development</span>
@@ -295,6 +299,10 @@
           <a class="dbz-drawer__sublink" href="/documentation/faq">FAQ</a>
           <a class="dbz-drawer__sublink" href="/documentation/online-resources">Resources on the Web</a>
           <div class="dbz-dropdown__section">Versions</div>
+          <a class="dbz-drawer__sublink dbz-version" href="/documentation/reference/nightly/">
+            <span class="dbz-version__number">nightly</span>
+            <span class="dbz-badge dbz-badge--dev">nightly</span>
+          </a>
           <a class="dbz-drawer__sublink dbz-version" href="/documentation/reference/3.8/">
             <span class="dbz-version__number">3.8</span>
             <span class="dbz-badge dbz-badge--dev">development</span>
@@ -777,7 +785,7 @@
         <div class="version-menu">
                 <a class="version is-current" href="/documentation/reference/connectors/postgresql.html" data-hash="true">
                     <span class="version-name">nightly</span>
-                    <span class="dbz-badge dbz-badge--dev">development</span>
+                    <span class="dbz-badge dbz-badge--dev">nightly</span>
                 </a>
                 <a class="version" href="/documentation/reference/3.8/connectors/postgresql.html" data-hash="true">
                                     <span class="version-name">3.8</span>
@@ -9053,7 +9061,7 @@ Double quotes around table names are optional if the fully qualified table name 
 <p>For each table that you list in the main property, you must define a corresponding <code>snapshot.select.statement.overrides.<em>&lt;schemaName&gt;</em>.<em>&lt;tableName&gt;</em></code> property that specifies the custom <code>SELECT</code> statement to run during the snapshot.
 The <code>SELECT</code> statement determines which rows from the table to include in the snapshot.</p>
 <div class="paragraph">
-<p>For example, to specify a SELECT statement for the <code>customer.orders</code> table, add the following property:</p>
+<p>For example, to specify a SELECT statement for the <code>customers.orders</code> table, add the following property:</p>
 </div>
 <div class="paragraph">
 <p><code>snapshot.select.statement.overrides.customers.orders</code></p>
@@ -9083,8 +9091,8 @@ The <code>SELECT</code> statement determines which rows from the table to includ
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre>"snapshot.select.statement.overrides": "customer.orders",
-"snapshot.select.statement.overrides.customer.orders": "SELECT * FROM customers.orders WHERE delete_flag = 0 ORDER BY id DESC"</pre>
+<pre>"snapshot.select.statement.overrides": "customers.orders",
+"snapshot.select.statement.overrides.customers.orders": "SELECT * FROM customers.orders WHERE delete_flag = 0 ORDER BY id DESC"</pre>
 </div>
 </div>
 </div>
@@ -11491,7 +11499,7 @@ How quickly this happens depends on the capabilities and performance of Kafka an
 
 <div id="toc-rightbar"></div>    <footer class="footer">
         <div class="wrapper">
-            <div class="copyright">Copyright &copy; 2026 Debezium Community (Rev: <span class="truncated"><a href="https://github.com/debezium/debezium/commit/ff1414a9e754c2d628fb4e4d94c1d63dcf4840be">ff1414a9</a></span>)
+            <div class="copyright">Copyright &copy; 2026 Debezium Community (Rev: <span class="truncated"><a href="https://github.com/debezium/debezium/commit/ed2fdb9f9fce824cff587ded8c96217b10ef3187">ed2fdb9f</a></span>)
             
         </div>
     </footer>
