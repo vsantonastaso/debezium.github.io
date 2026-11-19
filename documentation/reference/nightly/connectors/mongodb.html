@@ -144,7 +144,7 @@
           <hr class="dbz-dropdown__rule">
           <div class="dbz-dropdown__section">Versions</div>
           <div class="dbz-dropdown__versions">
-            <a class="dbz-version" href="/documentation/reference/nightly/">
+            <a class="dbz-version" href="/documentation/reference/">
               <span class="dbz-version__number">nightly</span>
               <span class="dbz-badge dbz-badge--dev">nightly</span>
             </a>
@@ -299,7 +299,7 @@
           <a class="dbz-drawer__sublink" href="/documentation/faq">FAQ</a>
           <a class="dbz-drawer__sublink" href="/documentation/online-resources">Resources on the Web</a>
           <div class="dbz-dropdown__section">Versions</div>
-          <a class="dbz-drawer__sublink dbz-version" href="/documentation/reference/nightly/">
+          <a class="dbz-drawer__sublink dbz-version" href="/documentation/reference/">
             <span class="dbz-version__number">nightly</span>
             <span class="dbz-badge dbz-badge--dev">nightly</span>
           </a>
@@ -2988,7 +2988,7 @@ The event payload contains the full state of the new document in the <code>after
     "payload": {
       "after": "{\"_id\" : {\"$numberLong\" : \"1004\"},\"first_name\" : \"Anne\",\"last_name\" : \"Kretchmar\",\"email\" : \"annek@noanswer.org\"}",
       "source": {
-        "version": "3.8.0.Alpha1",
+        "version": "3.8.0.Alpha2",
         "connector": "mongodb",
         "name": "fulfillment",
         "ts_ms": 1558965508000,
@@ -3178,7 +3178,7 @@ There is a new structured field <code>updateDescription</code> with a few additi
         "truncatedArrays": null
       },
       "source": {
-        "version": "3.8.0.Alpha1",
+        "version": "3.8.0.Alpha2",
         "connector": "mongodb",
         "name": "fulfillment",
         "ts_ms": 1558965508000,
@@ -3316,7 +3316,7 @@ Here is an example of a <em>delete</em> event for a document in the <code>custom
       "ts_ns": 1465495462115748263,
       "before":"{\"_id\": {\"$numberLong\": \"1004\"},\"first_name\": \"Anne Marie\",\"last_name\": \"Kretchmar\",\"email\": \"annek@noanswer.org\"}",
       "source": {
-        "version": "3.8.0.Alpha1",
+        "version": "3.8.0.Alpha2",
         "connector": "mongodb",
         "name": "fulfillment",
         "ts_ms": 1558965508000,
@@ -3507,7 +3507,7 @@ If Debezium were to fail during this time, its last oplog position is likely to 
 <ol class="arabic">
 <li>
 <p>Download the
-<a href="https://s01.oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=io.debezium&a=debezium-connector-mongodb&v=LATEST&c=plugin&e=tar.gz">connector&#8217;s plug-in archive</a>,</p>
+<a href="https://central.sonatype.com/repository/maven-snapshots/io/debezium/debezium-connector-mongodb/3.8.0-SNAPSHOT/debezium-connector-mongodb-3.8.0-20261119.120647-90-plugin.tar.gz">connector&#8217;s plug-in archive</a>,</p>
 </li>
 <li>
 <p>Extract the JAR files into your Kafka Connect environment.</p>
@@ -5198,6 +5198,48 @@ If its first event is split, the connector reads all fragments and records the l
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p>The maximum allowed size <strong>in bytes</strong> of the stored document for which change events are processed. This includes both, the size before and after database operation, more specifically this limits the size of fullDocument and fullDocumentBeforeChange filed of MongoDB change events.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="mongodb-property-cursor-buffer-max-events"></a><a href="#mongodb-property-cursor-buffer-max-events"><code>cursor.buffer.max.events</code></a></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Value of <a href="#mongodb-property-max-batch-size"><code>max.batch.size</code></a></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Specifies the maximum number of change stream events that the connector prefetches from MongoDB and holds in memory before it places them in the blocking queue.
+Buffered events are fully decoded documents, which can occupy several times their BSON size on the heap.
+They are not counted by <a href="#mongodb-property-max-queue-size-in-bytes"><code>max.queue.size.in.bytes</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>When the connector captures large documents, especially with full document lookups, set this property to a value lower than <code>max.batch.size</code>, or set <a href="#mongodb-property-cursor-buffer-max-bytes"><code>cursor.buffer.max.bytes</code></a>, to limit the memory used by the buffer without reducing the size of the batches that the connector processes.
+If the property is not set, or is set to <code>0</code>, the connector uses the value of <code>max.batch.size</code>.
+Negative values are not permitted.</p>
+</div>
+<div class="paragraph">
+<p>When the buffer is full, the connector waits for buffered events to be consumed before it fetches more.
+If the buffer stays full, the connector periodically logs a warning that reports how often it had to wait, at least every two minutes.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a id="mongodb-property-cursor-buffer-max-bytes"></a><a href="#mongodb-property-cursor-buffer-max-bytes"><code>cursor.buffer.max.bytes</code></a></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>0</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Specifies the maximum approximate size, in bytes, of the change stream events that the connector prefetches from MongoDB and holds in memory before it places them in the blocking queue.
+The connector estimates the size of each event from its decoded documents.
+The connector stops prefetching when the estimated size of the buffered events reaches this value, so the buffer can exceed the limit by at most one event.
+An event that is larger than the limit is still buffered when the buffer is empty.</p>
+</div>
+<div class="paragraph">
+<p>This limit applies in addition to <a href="#mongodb-property-cursor-buffer-max-events"><code>cursor.buffer.max.events</code></a>, and the buffer stops accepting events when it reaches either limit.
+Use this property when the size of captured documents varies widely, so that the memory used by the buffer is bounded regardless of document size.
+The default value (<code>0</code>) disables the size limit.
+Negative values are not permitted.</p>
 </div></div></td>
 </tr>
 <tr>
@@ -6910,7 +6952,7 @@ As a result, the secondary node that is elected as the new primary node might be
 
 <div id="toc-rightbar"></div>    <footer class="footer">
         <div class="wrapper">
-            <div class="copyright">Copyright &copy; 2026 Debezium Community (Rev: <span class="truncated"><a href="https://github.com/debezium/debezium/commit/ed2fdb9f9fce824cff587ded8c96217b10ef3187">ed2fdb9f</a></span>)
+            <div class="copyright">Copyright &copy; 2026 Debezium Community (Rev: <span class="truncated"><a href="https://github.com/debezium/debezium/commit/867e7c0e76fa22ec4215c9957c1fe3bcb78427c4">867e7c0e</a></span>)
             
         </div>
     </footer>

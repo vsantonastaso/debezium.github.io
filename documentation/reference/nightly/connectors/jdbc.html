@@ -144,7 +144,7 @@
           <hr class="dbz-dropdown__rule">
           <div class="dbz-dropdown__section">Versions</div>
           <div class="dbz-dropdown__versions">
-            <a class="dbz-version" href="/documentation/reference/nightly/">
+            <a class="dbz-version" href="/documentation/reference/">
               <span class="dbz-version__number">nightly</span>
               <span class="dbz-badge dbz-badge--dev">nightly</span>
             </a>
@@ -299,7 +299,7 @@
           <a class="dbz-drawer__sublink" href="/documentation/faq">FAQ</a>
           <a class="dbz-drawer__sublink" href="/documentation/online-resources">Resources on the Web</a>
           <div class="dbz-dropdown__section">Versions</div>
-          <a class="dbz-drawer__sublink dbz-version" href="/documentation/reference/nightly/">
+          <a class="dbz-drawer__sublink dbz-version" href="/documentation/reference/">
             <span class="dbz-version__number">nightly</span>
             <span class="dbz-badge dbz-badge--dev">nightly</span>
           </a>
@@ -1605,6 +1605,10 @@ If schema evolution is enabled, the connector prepares and executes a <code>CREA
 <p>When the Debezium JDBC connector receives an event from a topic, if the schema structure of the record differs from the schema structure of the destination table, the connector uses either the event&#8217;s key or its schema structure  to identify which columns are new, and must be added to the database table.
 If schema evolution is enabled, the connector prepares and executes an <code>ALTER TABLE</code> SQL statement before it applies the DML event to the destination table.
 Because changing column data types, dropping columns, and adjusting primary keys can be considered dangerous operations, the connector is prohibited from performing these operations.</p>
+</div>
+<div class="paragraph">
+<p>When several tasks write to the same destination table, more than one task might try to create or alter the table at the same time.
+If the database aborts a task&#8217;s table metadata read or DDL statement because of a lock conflict, such as a deadlock with another task&#8217;s <code>ALTER TABLE</code> statement, the connector rechecks the table and retries according to the <a href="#jdbc-property-flush-max-retries"><code>flush.max.retries</code></a> and <a href="#jdbc-property-flush-retry-delay-ms"><code>flush.retry.delay.ms</code></a> settings.</p>
 </div>
 <div class="paragraph">
 <p>The schema of each field determines whether a column is <code>NULL</code> or <code>NOT NULL</code>.
@@ -3052,7 +3056,7 @@ After you apply the SMT to an event that includes a field with the name <code>ID
 <div class="title">Procedure</div>
 <ol class="arabic">
 <li>
-<p>Download the Debezium <a href="https://repo1.maven.org/maven2/io/debezium/debezium-connector-jdbc/3.8.0.Alpha1/debezium-connector-jdbc-3.8.0.Alpha1-plugin.tar.gz">JDBC connector plug-in archive</a>.</p>
+<p>Download the Debezium <a href="https://repo1.maven.org/maven2/io/debezium/debezium-connector-jdbc/3.8.0.Alpha2/debezium-connector-jdbc-3.8.0.Alpha2-plugin.tar.gz">JDBC connector plug-in archive</a>.</p>
 </li>
 <li>
 <p>Extract the files into your Kafka Connect environment.</p>
@@ -4136,7 +4140,9 @@ Fully-qualified names for fields are of the form <code><em>fieldName</em></code>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p>Specifies the maximum number of retries that the connector performs after an attempt to flush changes to the target database results in certain database errors.
-If the number of retries exceeds the retry value, the sink connector enters a <em>FAILED</em> state.</p>
+If the number of retries exceeds the retry value, the sink connector enters a <em>FAILED</em> state.
+The connector applies the same limit when a lock conflict, such as a deadlock with a concurrent task, aborts the reading, creation, or alteration of a destination table during schema evolution.
+Setting this property to <code>0</code> disables these retries as well.</p>
 </div></div></td>
 </tr>
 <tr>
@@ -4158,7 +4164,8 @@ If the number of retries exceeds the retry value, the sink connector enters a <e
 <td class="content">
 <div class="paragraph">
 <p>When you set both the <code>flush.retry.delay.ms</code> and <a href="#jdbc-property-flush-max-retries"><code>flush.max.retries</code></a> properties, it can affect the behavior of the Kafka <a href="https://kafka.apache.org/documentation/#consumerconfigs_max.poll.interval.ms">max.poll.interval.ms</a> property.
-To prevent the connector from rebalancing, set the total retry time (flush.retry.delay.ms * flush.max.retries) to a value that is less than the value of <code>max.poll.interval.ms</code> (default is 5 minutes).</p>
+To prevent the connector from rebalancing, set the total retry time (flush.retry.delay.ms * flush.max.retries) to a value that is less than the value of <code>max.poll.interval.ms</code> (default is 5 minutes).
+Because lock conflicts during schema evolution are retried separately before the flush, a single batch can spend up to several times this total retry time waiting, so leave enough headroom below <code>max.poll.interval.ms</code>.</p>
 </div>
 </td>
 </tr>
@@ -4315,7 +4322,7 @@ Quoting behavior is dialect-specific, and varies among different types of databa
 
 <div id="toc-rightbar"></div>    <footer class="footer">
         <div class="wrapper">
-            <div class="copyright">Copyright &copy; 2026 Debezium Community (Rev: <span class="truncated"><a href="https://github.com/debezium/debezium/commit/ed2fdb9f9fce824cff587ded8c96217b10ef3187">ed2fdb9f</a></span>)
+            <div class="copyright">Copyright &copy; 2026 Debezium Community (Rev: <span class="truncated"><a href="https://github.com/debezium/debezium/commit/867e7c0e76fa22ec4215c9957c1fe3bcb78427c4">867e7c0e</a></span>)
             
         </div>
     </footer>
