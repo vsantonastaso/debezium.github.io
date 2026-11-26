@@ -3507,7 +3507,7 @@ If Debezium were to fail during this time, its last oplog position is likely to 
 <ol class="arabic">
 <li>
 <p>Download the
-<a href="https://central.sonatype.com/repository/maven-snapshots/io/debezium/debezium-connector-mongodb/3.8.0-SNAPSHOT/debezium-connector-mongodb-3.8.0-20261119.120647-90-plugin.tar.gz">connector&#8217;s plug-in archive</a>,</p>
+<a href="https://central.sonatype.com/repository/maven-snapshots/io/debezium/debezium-connector-mongodb/3.8.0-SNAPSHOT/debezium-connector-mongodb-3.8.0-20261126.120717-104-plugin.tar.gz">connector&#8217;s plug-in archive</a>,</p>
 </li>
 <li>
 <p>Extract the JAR files into your Kafka Connect environment.</p>
@@ -4613,8 +4613,10 @@ Custom <a href="#mongodb-property-cursor-pipeline"><code>cursor.pipeline</code><
 With <a href="#mongodb-property-cursor-pipeline-order"><code>cursor.pipeline.order=user_first</code></a>, MongoDB can check image availability for excluded events before the connector&#8217;s filters remove them, and report missing-image errors.
 The connector warns about this combination at startup, but does not reject the configuration.
 With <code>user_only</code>, the connector&#8217;s filters are not applied in the change stream, so the custom stages must exclude such events.
-With regex filters, MongoDB applies the database and collection exclude lists on the server, and its regular expression syntax differs from Java&#8217;s for some patterns.
-For example, with case-insensitive matching MongoDB matches non-ASCII letters in either case, and it supports POSIX character classes such as <code><a id=":alpha:"></a></code>.
+With regex filters, MongoDB applies the database and collection exclude lists on the server, and its regular expression syntax differs from Java&#8217;s for some patterns.</p>
+</div>
+<div class="paragraph">
+<p>For example, with case-insensitive matching MongoDB matches non-ASCII letters in either case, and it supports POSIX character classes such as <code>[[:alpha:]]</code>.
 An exclude pattern that MongoDB matches but Java does not removes events that the connector would otherwise capture.
 For single-collection capture, <a href="#mongodb-property-capture-scope"><code>capture.scope=collection</code></a> excludes events from other collections at the change stream level; see that property&#8217;s signaling and incremental snapshot limitations.</p>
 </div>
@@ -6952,7 +6954,7 @@ As a result, the secondary node that is elected as the new primary node might be
 
 <div id="toc-rightbar"></div>    <footer class="footer">
         <div class="wrapper">
-            <div class="copyright">Copyright &copy; 2026 Debezium Community (Rev: <span class="truncated"><a href="https://github.com/debezium/debezium/commit/867e7c0e76fa22ec4215c9957c1fe3bcb78427c4">867e7c0e</a></span>)
+            <div class="copyright">Copyright &copy; 2026 Debezium Community (Rev: <span class="truncated"><a href="https://github.com/debezium/debezium/commit/717b09b16d3ee4cf6cfad15b7f7b4037ee2d6f4c">717b09b1</a></span>)
             
         </div>
     </footer>

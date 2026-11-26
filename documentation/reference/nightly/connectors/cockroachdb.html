@@ -1030,8 +1030,12 @@ If the connector is offline for longer than the garbage collection window, a new
 The Debezium CockroachDB connector maps its <code>snapshot.mode</code> configuration to the CockroachDB <code>initial_scan</code> changefeed option, so the connector does not require a separate JDBC-based snapshot phase.</p>
 </div>
 <div class="paragraph">
-<p>During the initial scan phase, captured events are marked <code>op=r</code> to designate a read operation, which distinguishes snapshot events from ongoing change events.
-After the initial scan completes and the changefeed transitions to streaming, events are marked with the appropriate operation type (<code>c</code> for create, <code>u</code> for update, <code>d</code> for delete).</p>
+<p>During the initial scan phase, the connector marks the rows that the scan returns as <code>op=r</code> to designate a read operation, which distinguishes snapshot events from ongoing change events.
+In snapshot modes that continue to stream changes after the scan, the initial scan phase ends when the connector receives the first resolved timestamp from the changefeed.
+CockroachDB can send that timestamp some time after the scan finishes.
+If a row is updated or deleted in the meantime, the connector emits the change with its own operation type (<code>u</code> or <code>d</code>).
+If a row is inserted in the meantime, the connector emits the change as <code>op=r</code>, because CockroachDB reports rows from the scan and inserted rows in the same way.
+After the initial scan phase ends, events are marked with the appropriate operation type (<code>c</code> for create, <code>u</code> for update, <code>d</code> for delete).</p>
 </div>
 <div class="paragraph">
 <p>The following table shows how each <code>snapshot.mode</code> maps to the CockroachDB <code>initial_scan</code> option:</p>
@@ -1302,7 +1306,8 @@ The schema that the connector uses comes from its own JDBC discovery of the tabl
 <h3 id="cockroachdb-incremental-snapshots"><a class="anchor" href="#cockroachdb-incremental-snapshots"></a>Incremental snapshots</h3>
 <div class="paragraph">
 <p>The CockroachDB connector supports Debezium <a href="../configuration/signalling.html#debezium-signaling-incremental-snapshots" class="xref page">signal-based incremental snapshots</a>.
-An incremental snapshot re-reads existing rows from one or more tables and emits them as <code>op=r</code> (read) events, while the connector continues to capture ongoing changes without interruption.</p>
+An incremental snapshot re-reads existing rows from one or more tables and emits them as <code>op=r</code> (read) events, while the connector continues to capture ongoing changes without interruption.
+In these events, the <code>source.snapshot</code> field is set to <code>incremental</code>, which distinguishes them from the events of an initial scan.</p>
 </div>
 <div class="paragraph">
 <p>You can use incremental snapshots to perform the following tasks:</p>
@@ -4181,11 +4186,55 @@ In these abnormal situations, Debezium, like Kafka, provides <em>at least once</
 <li>
 <p>The connector cannot create a changefeed because the user lacks sufficient privileges (<code>CHANGEFEED</code>, <code>ALL</code>, or <code>admin</code> role membership).</p>
 </li>
+<li>
+<p>CockroachDB rejects the changefeed because an option has an invalid value or contains a syntax error.</p>
+</li>
+<li>
+<p>CockroachDB rejects the changefeed because an option, a parameter of the sink URI, or the type of the sink does not exist.</p>
+</li>
 </ul>
 </div>
 <div class="paragraph">
 <p>In these cases, the error message has details about the problem and possibly a suggested workaround.
-After you correct the configuration or address the CockroachDB problem, restart the connector.</p>
+After you correct the configuration or address the CockroachDB problem, restart the connector.
+CockroachDB checks the changefeed privileges as of the time at which a changefeed starts.
+If a changefeed starts at a stored offset, a privilege that was granted after that offset does not count, and the error message from the connector says so.</p>
+</div>
+<div class="paragraph">
+<p>The connector decides by the SQLSTATE of a CockroachDB error whether a retry can succeed.
+It stops for the error classes <code>0A</code> (feature not supported), <code>22</code> (data exception, which includes an invalid option value), <code>3D</code> (unknown database), and <code>42</code> (syntax error or access rule violation, which includes a missing privilege), and for the SQL state <code>28P01</code> (wrong password).
+CockroachDB reports some errors that a retry cannot fix without a specific SQLSTATE.
+The connector recognizes the following errors by their text, and stops:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>A changefeed option that does not exist.</p>
+</li>
+<li>
+<p>A parameter of the sink URI that does not exist.</p>
+</li>
+<li>
+<p>A sink type that does not exist.</p>
+</li>
+<li>
+<p>For a sinkless changefeed, a stored offset that is older than the garbage collection threshold, unless <code>snapshot.mode</code> is <code>when_needed</code>.
+The error message names that snapshot mode.
+With <code>when_needed</code>, the connector starts again with an initial scan, also when CockroachDB reports the error after the changefeed has delivered events.</p>
+</li>
+<li>
+<p>For a sinkless changefeed, a stored offset that is older than one of the captured tables, unless <code>snapshot.mode</code> is <code>when_needed</code>.
+CockroachDB rejects a changefeed that starts before one of its tables was created.</p>
+</li>
+<li>
+<p>For a sinkless changefeed, an initial scan that does not finish before CockroachDB garbage-collects the data as of the start of the scan.
+The connector stops in every snapshot mode, because a new scan would end in the same way.
+To resolve the error, increase <code>gc.ttlseconds</code> for the captured tables so that it covers the duration of the scan.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>It retries after all other CockroachDB errors, for example, when the Kafka sink of the changefeed cannot be reached.</p>
 </div>
 </div>
 <div class="sect2">
@@ -4383,7 +4432,7 @@ To include the <code>before</code> field in update events, set <code>cockroachdb
 
 <div id="toc-rightbar"></div>    <footer class="footer">
         <div class="wrapper">
-            <div class="copyright">Copyright &copy; 2026 Debezium Community (Rev: <span class="truncated"><a href="https://github.com/debezium/debezium/commit/867e7c0e76fa22ec4215c9957c1fe3bcb78427c4">867e7c0e</a></span>)
+            <div class="copyright">Copyright &copy; 2026 Debezium Community (Rev: <span class="truncated"><a href="https://github.com/debezium/debezium/commit/717b09b16d3ee4cf6cfad15b7f7b4037ee2d6f4c">717b09b1</a></span>)
             
         </div>
     </footer>
